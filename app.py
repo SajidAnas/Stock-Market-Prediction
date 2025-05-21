@@ -16,22 +16,12 @@ import requests
 @st.cache_data(ttl=3600)  # Cache for 1 hour
 def fetch_stock_data(symbol, start_date, end_date):
     try:
-        # Configure session
-        session = requests.Session()
-        session.headers.update({
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-            'Accept-Language': 'en-US,en;q=0.5',
-            'Connection': 'keep-alive',
-        })
-        
-        # Single API call to download data
+        # Single API call to download data without custom session
         stock_data = yf.download(
             symbol,
             start=start_date,
             end=end_date,
-            progress=False,
-            session=session
+            progress=False
         )
         
         if len(stock_data) == 0:
