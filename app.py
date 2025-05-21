@@ -8,6 +8,27 @@ from sklearn.preprocessing import MinMaxScaler
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, Dropout
 from tensorflow.keras.optimizers import Adam
+import time
+
+# Enable caching for yfinance data
+@st.cache_data(ttl=3600)  # Cache for 1 hour
+def fetch_stock_data(symbol, start_date, end_date):
+    try:
+        # Single API call to download data
+        stock_data = yf.download(
+            symbol,
+            start=start_date,
+            end=end_date,
+            progress=False
+        )
+        
+        if len(stock_data) == 0:
+            return None, "No data found for the given stock symbol. Please check the symbol and try again."
+            
+        return stock_data, None
+        
+    except Exception as e:
+        return None, str(e)
 
 def create_sequences(data, seq_length):
     X, y = [], []
@@ -42,11 +63,15 @@ def main():
         try:
             # Fetch the data
             with st.spinner("Fetching stock data..."):
-                stock_data = yf.download(stock_symbol, start=start_date, end=end_date, progress=False)
-            
-            if len(stock_data) == 0:
-                st.error("No data found for the given stock symbol. Please check the symbol and try again.")
-                return
+                st.write(f"Attempting to fetch data for {stock_symbol}")
+                st.write(f"Date range: {start_date.date()} to {end_date.date()}")
+                
+                stock_data, error = fetch_stock_data(stock_symbol, start_date, end_date)
+                if error:
+                    st.error(error)
+                    return
+                
+                st.write(f"Successfully downloaded data shape: {stock_data.shape}")
             
             # Prepare the data
             data = stock_data['Close'].values.reshape(-1, 1)
@@ -110,6 +135,10 @@ def main():
             
         except Exception as e:
             st.error(f"An error occurred: {str(e)}")
+            st.write("Debug information:")
+            st.write(f"Stock symbol: {stock_symbol}")
+            st.write(f"Start date: {start_date}")
+            st.write(f"End date: {end_date}")
 
 if __name__ == "__main__":
     main() 
