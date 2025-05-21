@@ -18,7 +18,12 @@ def fetch_stock_data(symbol, start_date, end_date):
     try:
         # Configure session
         session = requests.Session()
-        session.headers.update({'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'})
+        session.headers.update({
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.5',
+            'Connection': 'keep-alive',
+        })
         
         # Single API call to download data
         stock_data = yf.download(
@@ -30,12 +35,19 @@ def fetch_stock_data(symbol, start_date, end_date):
         )
         
         if len(stock_data) == 0:
-            return None, "No data found for the given stock symbol. Please check the symbol and try again."
+            # Try to get ticker info to verify if symbol exists
+            ticker = yf.Ticker(symbol)
+            info = ticker.info
+            if not info:
+                return None, f"No data found for symbol '{symbol}'. Please verify the symbol is correct."
+            return None, f"Found symbol '{symbol}' but no historical data available for the specified date range."
             
         return stock_data, None
         
     except Exception as e:
-        return None, str(e)
+        error_msg = f"Error fetching data for {symbol}: {str(e)}"
+        st.error(error_msg)
+        return None, error_msg
 
 def create_sequences(data, seq_length):
     X, y = [], []
