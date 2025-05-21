@@ -9,17 +9,24 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, Dropout
 from tensorflow.keras.optimizers import Adam
 import time
+import requests
 
 # Enable caching for yfinance data
+
 @st.cache_data(ttl=3600)  # Cache for 1 hour
 def fetch_stock_data(symbol, start_date, end_date):
     try:
+        # Configure session
+        session = requests.Session()
+        session.headers.update({'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'})
+        
         # Single API call to download data
         stock_data = yf.download(
             symbol,
             start=start_date,
             end=end_date,
-            progress=False
+            progress=False,
+            session=session
         )
         
         if len(stock_data) == 0:
